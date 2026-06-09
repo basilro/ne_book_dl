@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+recon/out/*
+!recon/out/.gitkeep
+*.apk
+cookie.txt
+.env
