@@ -1,0 +1,8 @@
+.git
+.venv
+venv
+redroid-data
+recon/out
+apk
+__pycache__
+*.pyc

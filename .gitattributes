@@ -1,0 +1,5 @@
+# 리눅스 컨테이너에서 도는 프로젝트 — 모든 텍스트 파일 LF 강제(특히 .sh)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.apk binary

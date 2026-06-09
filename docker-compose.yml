@@ -1,0 +1,41 @@
+name: nsm
+
+# 안드로이드 시리즈 앱 정찰 스택.
+#  - redroid: 호스트 커널 위에서 Android 를 컨테이너로 구동(KVM 불필요, binder 모듈 필요)
+#  - harness: adb + frida-tools + 우리 recon 스크립트 실행 컨테이너
+# 호스트 사전 준비(반드시): sudo modprobe binder_linux devices="binder,hwbinder,vndbinder"
+# 자세한 절차는 docs/RUNBOOK-docker.md
+
+services:
+  redroid:
+    image: ${REDROID_IMAGE:-redroid/redroid:13.0.0-latest}
+    container_name: nsm-redroid
+    privileged: true            # binder/디바이스 접근에 필요
+    ports:
+      - "5555:5555"             # adb (호스트에서 scrcpy/adb 로 접속)
+    volumes:
+      - ./redroid-data:/data    # Android /data 영속화 → 로그인 세션 유지
+    command:
+      - androidboot.redroid_gpu_mode=guest   # 소프트웨어 렌더(헤드리스 안전)
+      - androidboot.redroid_width=720
+      - androidboot.redroid_height=1280
+      - androidboot.redroid_dpi=320
+    restart: unless-stopped
+
+  harness:
+    build:
+      context: .
+      dockerfile: docker/harness/Dockerfile
+    container_name: nsm-harness
+    depends_on:
+      - redroid
+    environment:
+      ADB_TARGET: redroid:5555
+      NSM_PACKAGE: ${NSM_PACKAGE:-com.nhn.android.nbooks}
+    volumes:
+      - ./:/work                # 리포 전체(코드/스크립트, recon/out 결과물 포함)
+      - ./apk:/apk              # 시리즈 APK 를 여기에 두고 adb install
+    working_dir: /work
+    stdin_open: true
+    tty: true
+    command: ["sleep", "infinity"]   # 살려두고 exec 로 들어가 사용
